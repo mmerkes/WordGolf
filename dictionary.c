@@ -1,36 +1,54 @@
 #include <stdio.h>
-#include <stdbool.h>
 #include <string.h>
-//need to use strcmp in string.h
 
-int main (void) {
-	FILE *dictionary;
-	char buf[25];
-	char word[25];
-	bool validWord;
-	
-	dictionary = fopen("words.txt", "r");	
-	if (!dictionary)
-		return 1;
-		
-	char c;
-    int length = 0;
-	int i;
-	
-	for(i = 0; i < 25; i++)
-		word[i] = 0;
-	
-	while((c = getchar()) != '\n') {
-		word[length] = c;
-        length++;
-	}
-	
-	while (fgets(buf, 25, dictionary) != word)
-		printf("%s", buf);
-		
-		printf("%s", buf);
-		
-	fclose (dictionary);
-	
-	return 0;
+int main ( void )
+{
+    static const char filename[] = "/usr/share/dict/words";
+    FILE *file = fopen ( filename, "r" );
+    char word[25];
+    int i = 0;
+    char c;
+    
+    for(i = 0; i < 25; i++)
+        word[i] = 0;
+    i = 0;
+    
+    printf("Enter a word: ");
+    do {
+        c = getchar();
+        word[i] = c;
+        i++;
+    }
+    while ( c != '\n');
+    
+    if ( file != NULL )
+    {
+        char line [ 26 ]; //maximum line length
+        while ( fgets ( line, sizeof line, file ) != NULL ) /* read a line */
+        {
+      		if(strcmp(word, line) == 0 ) {
+      			printf("The program found %s\n", line);
+      			break;
+      		}
+        }
+        fclose ( file );
+    }
+    else
+    {
+        perror ( filename ); //why file didn't open
+    }
+    return 0;
 }
+
+
+//http://www.daniweb.com/software-development/c/code/216411/reading-a-file-line-by-line
+
+
+
+
+
+
+
+
+
+
