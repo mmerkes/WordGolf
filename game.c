@@ -210,7 +210,8 @@ void playWord (void) {
 //print score
 void printScore(int p) {
 	int i;
-	printf("Player");
+	printf("Plyr ");
+  printf("%d", p+1);
 	cumScore = 0;
 	
 	for(i = 0; i < 9; i++) {
