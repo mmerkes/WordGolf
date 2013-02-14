@@ -2,4 +2,4 @@ game
 dictionary
 model
 .DS_Store
-
+*.out
