@@ -1,9 +1,11 @@
 /*
-version 0.00002
+version 0.00003
 NOTES:
-1. Need to check words by dictionary
-2. For timed games, running out of time would be a penalty stroke
-3. Create two player option
+1. For timed games, running out of time would be a penalty stroke
+2. Dictionary does not support plurals or different versions of verbs
+	i.e. runs, bells, fills, etc.
+3. Create arrays with different combinations of pars on holes
+4. Adjust letter generator to pick easier letters for par 3s and 4s
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,7 +20,8 @@ int length, count, cumScore = 0, hole = 1, players = 1, player = 0, score; //len
 bool holeOver = false, escape = false;
 int pars[9] = { 4, 4, 5, 3, 4, 5, 3, 4, 5 };
 int par = 32;
-int scorecard[9][4]; //[par][score]
+int scorecard[9][4]; //[hole][score]
+char clear;
 
 char letters[26] = { 	'Q', 'J', 'X', 'Z', 'K', 'V', 'B', 'P', 'G', 'C',
 						'W', 'Y', 'U', 'F', 'H', 'M', 'L', 'D', 'R', 'N',
@@ -211,7 +214,10 @@ void printScore(int p) {
 	cumScore = 0;
 	
 	for(i = 0; i < 9; i++) {
-		printf("%3i", scorecard[i][p]);
+		if(scorecard[i][p] == 0)
+			printf("%3c", ' ');
+		else
+			printf("%3i", scorecard[i][p]);
 		cumScore += scorecard[i][p];
 	}
 		printf("%4i\n", cumScore);
@@ -223,7 +229,7 @@ void displayScorecard(void) {
 	int i, j;
 	
 	printf("SCORECARD\n");
-	printf("       1  2  3  4  5  6  7  8  9  TOTAL\n");
+	printf("        1  2  3  4  5  6  7  8  9  TOTAL\n");
 	printf("------+--+--+--+--+--+--+--+--+--+----+\n");
 	printf("Par   ");
 	
@@ -242,7 +248,6 @@ void playHole (void) {
 	holeOver = false, escape = false;
 	count = 0, score = 0;
 	int i;
-	char clear;
 	
 	generateBoard(board);
 	displayScorecard();
@@ -280,24 +285,35 @@ int main (void) {
 
     bool checkLetters(void);
     int getWord (void);
+    bool validPlayers = false;
     
     int i, j;
     
 	srand(time(NULL));
 	
-
+	while(!validPlayers) {
+		printf("How many players are there? ");
+		scanf("%i%c", &players, &clear);
+		if(players >= 1 && players <= 4)
+			validPlayers = true;
+		else
+			printf("\nYou can only choose 1 - 4 players\n\n");
+	}
     
-    //initialize scorecard
+    //initialize scorecards
     for(i = 0; i < 9; i++) {
-    	for(j = 0; j < 4; j++);
+    	for(j = 0; j < players; j++);
     	scorecard[i][j] = 0;
     }
 	
 	printf("\n\n");
 	
     for( ; hole <= 9; hole++) {
-		playHole();
-		printf("\n\n");
+    	player = 0;
+    	for( ; player < players; player++) {
+			playHole();
+			printf("\n\n");
+		}
     }
     
     displayScorecard();
