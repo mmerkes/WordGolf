@@ -3,30 +3,22 @@ version 0.00002
 NOTES:
 1. Need to check words by dictionary
 2. For timed games, running out of time would be a penalty stroke
-3. Create two player option - create different function in menu
-4. Have option for pro tour rules or amateur tour rules
-5. Do yardage: i.e. par 4 443 yards,
-	yardage * lettersUsed / lettersOnBoard
-
-New bugs
-1. does not calculate score right
-2. need to rethink par 3s and 4s
-3. printing scorecard inconsistent
+3. Create two player option
 */
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <stdbool.h>
-#include <string.h>
 
 
 char board[25]; //houses characters for the board
 char temp[25];	//temporarily houses board characters while checking validity
 char word[25]; //stores the characters of the word input from user
-int length, count, cumScore = 0, hole, par, shots; //length of word, count, adds score, hole
-bool holeOver = false;
-//int difficulty, par = 0; //difficulty of the hole, cumulative par
-int scorecard[9][2]; //[par][score]
+int length, count, cumScore = 0, hole = 1, players = 1, player = 0, score; //length of word, count, adds score, hole
+bool holeOver = false, escape = false;
+int pars[9] = { 4, 4, 5, 3, 4, 5, 3, 4, 5 };
+int par = 32;
+int scorecard[9][4]; //[par][score]
 
 char letters[26] = { 	'Q', 'J', 'X', 'Z', 'K', 'V', 'B', 'P', 'G', 'C',
 						'W', 'Y', 'U', 'F', 'H', 'M', 'L', 'D', 'R', 'N',
@@ -48,35 +40,49 @@ char generateChar (void) {
 	return randChar;
 }
 
-//Create an array of 25 random characters
-void generateBoard (char array[par * par]) {
-
+//Create an array of 25 random characters, takes board as argument
+void generateBoard (char array[25]) {
 	int i;
 	
-	for(i = 0; i < (par * par); i++)
+	for(i = 0; i < (pars[hole - 1]* pars[hole - 1]); i++)
 		array[i] = generateChar();
+	for( ; i < 25; i++)
+		array[i] = 0;
+}
+
+//displays the top and bottom of the board
+void displayEdge (void) {
+	int i;
+	
+	printf("  +---");
+    	
+    for(i = 0; i < pars[hole - 1]; i++)
+    	printf("+---");
+    
+    printf("+\n");
 }
 
 //print game board
-void displayBoard (char matrix[par * par]) {
+void displayBoard (char matrix[25]) {
 	int i, column;
     
     printf("\n");
-    	printf("  +---+---+---+---+---+---+\n");
-	for (i = 0; i < (par * par); ) {
+    displayEdge();
+	for (i = 0; i < (pars[hole - 1] * pars[hole - 1]); ) {
 		printf("  |");
-		for ( column = 1; column <= par; ++column ) {
+		for ( column = 1; column <= pars[hole - 1]; ++column ) {
 			printf ("%4c", matrix[i]);
 			i++;
 		}
 		printf ("   |\n");
 	}
-	printf("  +---+---+---+---+---+---+\n");
+	displayEdge();
 	
 	printf("\n");
 	if(!holeOver) {
-		printf("Enter next word or 0 to putt ");
-		printf("out and end the hole\n\n");
+		printf("Enter next word or\n");
+		printf("0 to putt out and\n");
+		printf("end the hole\n\n");
 	}
 }
 
@@ -84,70 +90,72 @@ void displayBoard (char matrix[par * par]) {
 int getWord (void) {
 	char c;
     length = 0;
-    int i;
-    for(i = 0; i < 25; i++)
-    	word[i] = 0;
 	
-	while((c = getchar()) != '\0') {
+	while((c = getchar()) != '\n') {
 		if(c == '0') {
 			holeOver = true;
 			c = getchar();
+			escape = true;
 			break;	
 		}
 		//changes lowercase to uppercase letter
-		if(c >= 97 && c <= 122 && c != '\n')
+		if(c >= 97 && c <= 122)
 			c -= 32;
-			
 		word[length] = c;
-			
         length++;
 	}
-	return (length - 1);
+	return length;
 }
 
-bool checkWord(void) {
+//checks the word in the dictionary
+bool wordLookup(void) {
 	static const char filename[] = "/usr/share/dict/words";
-   	FILE *file = fopen ( filename, "r" );
-   	bool validWord = false;
-   	int i = 0;
-   	
-   	while(word[i] != '\n') {
-   		word[i] += 32;
-   	}
-
-   	if ( file != NULL )
-   	{
-      	char line [ 26 ]; //max size length
-      	while ( fgets ( line, sizeof line, file ) != NULL ) /* read a line */
-      	{  
-      		if(strcmp(word, line) == 0 ) {
-      			validWord = true;
+    FILE *file = fopen ( filename, "r" );
+	bool wordFound = false;
+    char spellcheck[26];
+    int i = 0;
+    char c;
+    
+    for(i = 0; i < length; i++)
+    	spellcheck[i] = word[i] + 32;
+    spellcheck[i] = '\n';
+    i++;
+    for( ; i < 26; i++)
+        spellcheck[i] = 0;
+    i = 0;
+    
+    if ( file != NULL )
+    {
+        char line [ 26 ]; //maximum line length
+        while ( fgets ( line, sizeof line, file ) != NULL ) /* read a line */
+        {
+      		if(strcmp(spellcheck, line) == 0 ) {
+      			wordFound = true;
       			break;
-      		}    		
-    	}
-      	fclose ( file );
-   	}
-   else
-   {
-      perror ( filename ); /* why didn't the file open? */
-   }
-   i = 0;
-      	while(word[i] != '\n') {
-   		word[i] -= 32;
-   }
-   return validWord;
+      		}
+        }
+        fclose ( file );
+    }
+    else
+    {
+        perror ( filename ); //why file didn't open
+    }
+    if(!wordFound)
+    	printf("\nNice try buck-o, but that's not a word!\nTry again\n\n");
+    
+    return wordFound;
 }
 
 //verify that all of the letters are available to use
 bool checkLetters(void) {
-	bool validLetter, validWord = true;
+	bool validLetter, validWord = true; //Do I need to declare validWord?
 	int i, j;
 	
 	for(i = 0; i < length; i++) {
-		if(holeOver)
+		if(holeOver) //necessary?
 			break;
 		validLetter = false;
-		for(j = 0; j < (par * par); j++) {
+		for(j = 0; j < (pars[hole - 1] * pars[hole - 1]); j++) {
 			if(word[i] == temp[j]) {
 				temp[j] = '_';
 				validLetter = true;
@@ -161,12 +169,13 @@ bool checkLetters(void) {
 			break;
 		}
 	}
-	if(validWord) {
-		if(checkWord()){
-			count += length;
-			shots++;
-		}
+	if(validWord && !escape)
+		validWord = wordLookup();
+	if(validWord && !escape) {
+		score++;
 	}
+	if(validWord)
+		count += length;
 		
 	return validWord;
 }
@@ -177,93 +186,98 @@ void playWord (void) {
 	bool validWord = false;
 	
 	while(!validWord) {
-		if(holeOver)
+		if(holeOver) //Why did I add this?
 			break;
         validWord = true;
 		length = getWord();
         
 		//Make temp[] equal to board[]
-		for(i = 0; i < (par * par); i++)
+		for(i = 0; i < 25; i++)
 			temp[i] = board[i];
 			
 		validWord = checkLetters();  
 
 		if(validWord) {
-			for(i = 0; i < (par * par); i++)
+			for(i = 0; i < 25; i++)
 				board[i] = temp[i];
 		}
 	}
 }
 
-/*
-void setPar(void) {
-	if (difficulty <= 30) {
-		printf("Hole number %i is a par 3.\n\n", hole);
-		scorecard[hole - 1][0] = 3;
-		par += 3;
-	} else if (difficulty >= 38) {
-		printf("Hole number %i is a par 5.\n\n", hole);
-		scorecard[hole - 1][0] = 5;
-		par += 5;
-	} else {
-		printf("Hole number %i is a par 4.\n\n", hole);
-		scorecard[hole - 1][0] = 4;
-		par += 4;
-	}
-} */
-
-//print scorecard
-void displayScorecard(void) {
+//print score
+void printScore(int p) {
 	int i;
+	printf("Player");
+	cumScore = 0;
 	
-	printf("SCORECARD\n");
-	printf("       1  2  3  4  5  6  7  8  9  TOTAL\n");
-	printf("------+--+--+--+--+--+--+--+--+--+----+\n");
-	//printf("Par   ");
-	//for(i = 0; i < 9; i++)
-	//	printf("%3i", scorecard[i][0]);
-	//	printf("%4i\n", par);
-	printf("Score ");
-	for(i = 0; i < 9; i++)
-		printf("%3i", scorecard[i][1]);
+	for(i = 0; i < 9; i++) {
+		printf("%3i", scorecard[i][p]);
+		cumScore += scorecard[i][p];
+	}
 		printf("%4i\n", cumScore);
 	printf("------+--+--+--+--+--+--+--+--+--+----+\n");
 }
 
+//print scorecard
+void displayScorecard(void) {
+	int i, j;
+	
+	printf("SCORECARD\n");
+	printf("       1  2  3  4  5  6  7  8  9  TOTAL\n");
+	printf("------+--+--+--+--+--+--+--+--+--+----+\n");
+	printf("Par   ");
+	
+	//print pars
+	for(i = 0; i < 9; i++)
+		printf("%3i", pars[i]);
+	printf("%4i\n", par);
+	
+	//print the score for each player
+	for(j = 0; j < players; j++)
+		printScore(j);
+}
+
 //start a new hole
 void playHole (void) {
-	holeOver = false;
-	count = 0, shots = 0;
-	
-	printf("What par is the next hole? ");
-	scanf("%i", &par);
+	holeOver = false, escape = false;
+	count = 0, score = 0;
+	int i;
+	char clear;
 	
 	generateBoard(board);
-	//setPar();
 	displayScorecard();
 	displayBoard(board);
 	
 	//play game board until hole is over
 	while(!holeOver) {
+		for(i = 0; i < 25; i++)
+        	word[i] = 0;
 		playWord();
 		displayBoard(board);
-		if(count == 25)
-			holeOver = true;
+		
+		//if there are only two or less letters left, end the hole
+		if(count >= ((pars[hole - 1] * pars[hole - 1]) - 2)) {
+			holeOver = true; 
+		}
 	}
-	scorecard[hole - 1][1] = ((par * par - count) + shots);
-	cumScore += scorecard[hole - 1][1];
+	//Take the score
+	scorecard[hole - 1][player] = 
+				((pars[hole - 1] * pars[hole - 1]) - count) + score;
+	printf("The hole is over and you scored a %i.\n\n", scorecard[hole - 1][player]);
+	
+	//pause game
+	printf("Press enter to go to the next hole.\n");
+	scanf("%c", &clear); 
 }
 
 int main (void) {
     
     char generateChar (void);
-    void generateBoard (char array[par * par]);
-    void displayBoard (char matrix[par * par]);
+    void generateBoard (char array[25]);
+    void displayBoard (char matrix[25]);
     void playHole (void);
     void playWord (void);
-    bool checkWord(void);
-    //void setPar(void);
-    
+
     bool checkLetters(void);
     int getWord (void);
     
@@ -271,24 +285,23 @@ int main (void) {
     
 	srand(time(NULL));
 	
-	for(i = 0; i < 25; i++)
-        word[i] = '0';
+
     
     //initialize scorecard
     for(i = 0; i < 9; i++) {
-    	scorecard[i][0] = 0;
-    	scorecard[i][1] = 0;
+    	for(j = 0; j < 4; j++);
+    	scorecard[i][j] = 0;
     }
 	
 	printf("\n\n");
 	
-    for(hole = 1; hole <= 9; hole++) {
+    for( ; hole <= 9; hole++) {
 		playHole();
 		printf("\n\n");
     }
     
     displayScorecard();
-    printf("\nThat's it! See you next round!\n\n");
+    printf("That's it! See you next round!\n");
     
     return 0;
 }
