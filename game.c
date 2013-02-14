@@ -6,6 +6,9 @@ NOTES:
 	i.e. runs, bells, fills, etc.
 3. Create arrays with different combinations of pars on holes
 4. Adjust letter generator to pick easier letters for par 3s and 4s
+5. On the new hole screen, program keeps letters if you enter letters and then
+	hit enter. Also, remove "Enter next word" if hole is finished.
+Dictionary: perhaps copy hidden file /Library/spelling/localdictionary ?
 */
 #include <stdio.h>
 #include <stdlib.h>
