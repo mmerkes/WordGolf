@@ -1,13 +1,11 @@
 /*
-version 0.00003
+version 0.00004
 NOTES:
 1. For timed games, running out of time would be a penalty stroke
 2. Dictionary does not support plurals or different versions of verbs
 	i.e. runs, bells, fills, etc.
 3. Create arrays with different combinations of pars on holes
 4. Adjust letter generator to pick easier letters for par 3s and 4s
-5. On the new hole screen, program keeps letters if you enter letters and then
-	hit enter. Also, remove "Enter next word" if hole is finished.
 Dictionary: perhaps copy hidden file /Library/spelling/localdictionary ?
 */
 #include <stdio.h>
@@ -25,6 +23,7 @@ int pars[9] = { 4, 4, 5, 3, 4, 5, 3, 4, 5 };
 int par = 32;
 int scorecard[9][4]; //[hole][score]
 char clear;
+char names[4][15];
 
 char letters[26] = { 	'Q', 'J', 'X', 'Z', 'K', 'V', 'B', 'P', 'G', 'C',
 						'W', 'Y', 'U', 'F', 'H', 'M', 'L', 'D', 'R', 'N',
@@ -210,11 +209,22 @@ void playWord (void) {
 	}
 }
 
+//Prints the line in scoreboard
+void printLine (void) {
+	printf("------+--+--+--+--+--+--+--+--+--+----+\n");
+}
+
 //print score
 void printScore(int p) {
 	int i;
-	printf("Plyr ");
-  printf("%d", p+1);
+	
+	//Print player name
+	for(i = 0; i < 6; i++) {
+		printf("%c", names[p][i]); 
+		if(names[p][i] == '\0')
+			printf(" ");	
+	}
+		
 	cumScore = 0;
 	
 	for(i = 0; i < 9; i++) {
@@ -225,7 +235,6 @@ void printScore(int p) {
 		cumScore += scorecard[i][p];
 	}
 		printf("%4i\n", cumScore);
-	printf("------+--+--+--+--+--+--+--+--+--+----+\n");
 }
 
 //print scorecard
@@ -234,8 +243,8 @@ void displayScorecard(void) {
 	
 	printf("SCORECARD\n");
 	printf("        1  2  3  4  5  6  7  8  9  TOTAL\n");
-	printf("------+--+--+--+--+--+--+--+--+--+----+\n");
-	printf("Par   ");
+	printLine();
+	printf("PAR   ");
 	
 	//print pars
 	for(i = 0; i < 9; i++)
@@ -243,8 +252,12 @@ void displayScorecard(void) {
 	printf("%4i\n", par);
 	
 	//print the score for each player
-	for(j = 0; j < players; j++)
+	for(j = 0; j < players; j++) {
+		if(j == 2 && players == 4)
+			printLine();
 		printScore(j);
+	}
+	printLine();
 }
 
 //start a new hole
@@ -252,6 +265,7 @@ void playHole (void) {
 	holeOver = false, escape = false;
 	count = 0, score = 0;
 	int i;
+	char c;
 	
 	generateBoard(board);
 	displayScorecard();
@@ -275,8 +289,48 @@ void playHole (void) {
 	printf("The hole is over and you scored a %i.\n\n", scorecard[hole - 1][player]);
 	
 	//pause game
+	
 	printf("Press enter to go to the next hole.\n");
-	scanf("%c", &clear); 
+	while((c = getchar()) != '\n');
+}
+
+//Get the number of players
+void getPlayers (void) {
+	bool validPlayers = false;
+	printf("\n\n");
+
+	while(!validPlayers) {
+		printf("How many players are there? ");
+		scanf("%i%c", &players, &clear);
+		if(players >= 1 && players <= 4)
+			validPlayers = true;
+		else
+			printf("\nYou can only choose 1 - 4 players\n\n");
+	}
+	printf("\n");
+}
+
+//Get players names
+void getNames(void) {
+	int p, j;
+	
+	//initialize names
+	for(p = 0; p < players; p++)
+		for(j = 0; j < 15; j++)
+			names[p][j] = '\0';
+			
+	
+	//initialize scorecards
+    for(p = 0; p < 9; p++) {
+    	for(j = 0; j < players; j++);
+    	scorecard[p][j] = 0;
+    }
+	
+	for(p = 0; p < players; p++){
+		printf("Enter a name for player %i: ", p);
+		scanf("%s%c", &names[p][0], &clear);
+	}
+	printf("\n");
 }
 
 int main (void) {
@@ -289,29 +343,13 @@ int main (void) {
 
     bool checkLetters(void);
     int getWord (void);
-    bool validPlayers = false;
-    
-    int i, j;
     
 	srand(time(NULL));
 	
-	while(!validPlayers) {
-		printf("How many players are there? ");
-		scanf("%i%c", &players, &clear);
-		if(players >= 1 && players <= 4)
-			validPlayers = true;
-		else
-			printf("\nYou can only choose 1 - 4 players\n\n");
-	}
-    
-    //initialize scorecards
-    for(i = 0; i < 9; i++) {
-    	for(j = 0; j < players; j++);
-    	scorecard[i][j] = 0;
-    }
+	getPlayers();
+	getNames();
 	
-	printf("\n\n");
-	
+	//play a round
     for( ; hole <= 9; hole++) {
     	player = 0;
     	for( ; player < players; player++) {
