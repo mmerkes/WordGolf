@@ -327,7 +327,7 @@ void getNames(void) {
     }
 	
 	for(p = 0; p < players; p++){
-		printf("Enter a name for player %i: ", p);
+		printf("Enter a name for player %i: ", p + 1);
 		scanf("%s%c", &names[p][0], &clear);
 	}
 	printf("\n");
