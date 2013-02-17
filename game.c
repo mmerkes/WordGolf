@@ -114,7 +114,8 @@ int getWord (void) {
 
 //checks the word in the dictionary
 bool wordLookup(void) {
-	static const char filename[] = "/usr/share/dict/words";
+	static const char filename[] = 
+			"/Users/Matt/Documents/Programming/Apps/WordGolf/wordsEn.txt";
     FILE *file = fopen ( filename, "r" );
 	bool wordFound = false;
     char spellcheck[26];
@@ -123,6 +124,8 @@ bool wordLookup(void) {
     
     for(i = 0; i < length; i++)
     	spellcheck[i] = word[i] + 32;
+    spellcheck[i] = '\r';
+    i++;
     spellcheck[i] = '\n';
     i++;
     for( ; i < 26; i++)
@@ -153,12 +156,10 @@ bool wordLookup(void) {
 
 //verify that all of the letters are available to use
 bool checkLetters(void) {
-	bool validLetter, validWord = true; //Do I need to declare validWord?
+	bool validLetter, validWord = true;
 	int i, j;
 	
 	for(i = 0; i < length; i++) {
-		if(holeOver) //necessary?
-			break;
 		validLetter = false;
 		for(j = 0; j < (pars[hole - 1] * pars[hole - 1]); j++) {
 			if(word[i] == temp[j]) {
@@ -359,7 +360,9 @@ int main (void) {
     }
     
     displayScorecard();
+    printf("\n");
     printf("That's it! See you next round!\n");
+    printf("\n");
     
     return 0;
 }
