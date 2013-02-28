@@ -19,9 +19,9 @@ char temp[25];	//temporarily houses board characters while checking validity
 char word[25]; //stores the characters of the word input from user
 int length, count, cumScore = 0, hole = 1, players = 1, player = 0, score; //length of word, count, adds score, hole
 bool holeOver = false, escape = false;
-int pars[9] = { 4, 4, 5, 3, 4, 5, 3, 4, 5 };
+int pars[9] = { 4, 4, 5, 3, 4, 5, 3, 4, 5 }; //A pointer could be implemented that would change every hole
 int par = 32;
-int scorecard[9][4]; //[hole][score]
+int scorecard[9][4]; //[hole][score] *modify to match the rest of the structing; i.e. score | hole
 char clear;
 char names[4][15];
 
@@ -40,7 +40,7 @@ char generateChar (void) {
 	random = (2640 - random * random / 3) / 100 - 1;
 	
 	//65 in ASCII is 'A'
-	randChar = letters[random];
+	randChar = letters[random]; //make into a pointer
 	
 	return randChar;
 }
@@ -123,8 +123,8 @@ bool wordLookup(void) {
     char c;
     
     for(i = 0; i < length; i++)
-    	spellcheck[i] = word[i] + 32;
-    spellcheck[i] = '\r';
+    	spellcheck[i] = word[i] + 32; //add function lowerCase(char *letter) to clarify
+    spellcheck[i] = '\r'; //is this necessary?
     i++;
     spellcheck[i] = '\n';
     i++;
@@ -137,7 +137,7 @@ bool wordLookup(void) {
         char line [ 26 ]; //maximum line length
         while ( fgets ( line, sizeof line, file ) != NULL ) /* read a line */
         {
-      		if(strcmp(spellcheck, line) == 0 ) {
+      		if(strcmp(spellcheck, line) == 0 ) { //look at the guts of strcmp to see if can simplify
       			wordFound = true;
       			break;
       		}
@@ -150,12 +150,13 @@ bool wordLookup(void) {
     }
     if(!wordFound)
     	printf("\nNice try buck-o, but that's not a word!\nTry again\n\n");
+    	//Find a way to print words that didn't make it to a file to review later
     
     return wordFound;
 }
 
 //verify that all of the letters are available to use
-bool checkLetters(void) {
+bool checkLetters(void) { //review Kochan function alphabetic() to see if we can simplify
 	bool validLetter, validWord = true;
 	int i, j;
 	
@@ -226,7 +227,7 @@ void printScore(int p) {
 			printf(" ");	
 	}
 		
-	cumScore = 0;
+	cumScore = 0; //create a new way to keep a running total
 	
 	for(i = 0; i < 9; i++) {
 		if(scorecard[i][p] == 0)
